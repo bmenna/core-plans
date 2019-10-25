@@ -12,4 +12,10 @@ Binary package
 
 ## Usage
 
-*TODO: Add instructions for usage*
+`ffmpeg -i video.mp4` will output information about `video.mp4`.
+
+`ffmpeg -i video.mp4 video.avi` will convert from `mp4` to `avi`.
+
+`ffmpeg -formats` will output all formats ffmpeg has available to it.
+
+Full documentation is available [here](https://ffmpeg.org/documentation.html)

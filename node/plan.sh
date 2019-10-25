@@ -1,22 +1,28 @@
 pkg_name=node
 pkg_origin=core
-pkg_version=8.11.2
+pkg_version=12.9.0
 pkg_description="Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
 pkg_upstream_url=https://nodejs.org/
 pkg_license=('MIT')
 pkg_maintainer="The Habitat Maintainers <humans@habitat.sh>"
-pkg_source=https://nodejs.org/dist/v${pkg_version}/node-v${pkg_version}.tar.gz
-pkg_shasum=0ac2c4de270caa08b5adcdb3c6bcb8aae3651a37d035d385bc819fbacaf350e6
-pkg_deps=(core/glibc core/gcc-libs core/python2 core/bash)
-pkg_build_deps=(core/gcc core/grep core/make)
+pkg_source="https://nodejs.org/dist/v${pkg_version}/node-v${pkg_version}.tar.gz"
+pkg_shasum=88cb425086a87323288c8389e974e8c1001b81fe11c529e64592e8feb2d12f93
+pkg_deps=(
+  core/glibc
+  core/gcc-libs
+  core/python2
+  core/bash
+)
+pkg_build_deps=(
+  core/gcc
+  core/grep
+  core/make
+)
 pkg_bin_dirs=(bin)
 pkg_include_dirs=(include)
 pkg_interpreters=(bin/node)
 pkg_lib_dirs=(lib)
-
-# the archive contains a 'v' version # prefix, but the default value of
-# pkg_dirname is node-${pkg_version} (without the v). This tweak makes build happy
-pkg_dirname=node-v$pkg_version
+pkg_dirname="node-v${pkg_version}"
 
 do_prepare() {
   # ./configure has a shebang of #!/usr/bin/env python2. Fix it.

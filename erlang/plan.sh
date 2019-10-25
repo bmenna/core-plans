@@ -1,16 +1,29 @@
 pkg_name=erlang
 pkg_origin=core
-pkg_version=20.0
+pkg_version=21.3
 pkg_description="A programming language for massively scalable soft real-time systems."
 pkg_upstream_url="http://www.erlang.org/"
-pkg_dirname=otp_src_${pkg_version}
+pkg_dirname="otp_src_${pkg_version}"
 pkg_license=('Apache-2.0')
 pkg_maintainer="The Habitat Maintainers <humans@habitat.sh>"
-pkg_source=http://www.erlang.org/download/otp_src_${pkg_version}.tar.gz
-pkg_filename=otp_src_${pkg_version}.tar.gz
-pkg_shasum=fe80e1e14a2772901be717694bb30ac4e9a07eee0cc7a28988724cbd21476811
-pkg_deps=(core/glibc core/zlib core/ncurses core/openssl core/sed)
-pkg_build_deps=(core/coreutils core/gcc core/make core/openssl core/perl core/m4)
+pkg_source="http://www.erlang.org/download/otp_src_${pkg_version}.tar.gz"
+pkg_filename="otp_src_${pkg_version}.tar.gz"
+pkg_shasum=69a743c4f23b2243e06170b1937558122142e47c8ebe652be143199bfafad6e4
+pkg_build_deps=(
+  core/coreutils
+  core/gcc
+  core/make
+  core/openssl
+  core/perl
+  core/m4
+)
+pkg_deps=(
+  core/glibc
+  core/zlib
+  core/ncurses
+  core/openssl
+  core/sed
+)
 pkg_bin_dirs=(bin)
 pkg_include_dirs=(include)
 pkg_lib_dirs=(lib)
@@ -31,16 +44,17 @@ do_prepare() {
 do_build() {
   sed -i 's/std_ssl_locations=.*/std_ssl_locations=""/' erts/configure.in
   sed -i 's/std_ssl_locations=.*/std_ssl_locations=""/' erts/configure
-  ./configure --prefix="${pkg_prefix}" \
-              --enable-threads \
-              --enable-smp-support \
-              --enable-kernel-poll \
-              --enable-dynamic-ssl-lib \
-              --enable-shared-zlib \
-              --enable-hipe \
-              --with-ssl="$(pkg_path_for openssl)" \
-              --with-ssl-include="$(pkg_path_for openssl)/include" \
-              --without-javac
+  CFLAGS="${CFLAGS} -O2" ./configure \
+    --prefix="${pkg_prefix}" \
+    --enable-threads \
+    --enable-smp-support \
+    --enable-kernel-poll \
+    --enable-dynamic-ssl-lib \
+    --enable-shared-zlib \
+    --enable-hipe \
+    --with-ssl="$(pkg_path_for openssl)" \
+    --with-ssl-include="$(pkg_path_for openssl)/include" \
+    --without-javac
   make
 }
 

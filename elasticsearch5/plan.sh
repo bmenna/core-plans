@@ -1,32 +1,16 @@
+source "$(dirname "${BASH_SOURCE[0]}")/../elasticsearch/plan.sh"
+
 pkg_name=elasticsearch5
+pkg_distname=elasticsearch
 pkg_origin=core
-pkg_version=5.6.4
+pkg_version=5.6.14
 pkg_maintainer="The Habitat Maintainers <humans@habitat.sh>"
 pkg_description="Open Source, Distributed, RESTful Search Engine"
 pkg_upstream_url="https://elastic.co"
 pkg_license=('Revised BSD')
-pkg_source=https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${pkg_version}.tar.gz
-pkg_shasum=1098fc776fae8c74e65f8e17cf2ea244c1d07c4e6711340c9bb9f6df56aa45b0
+pkg_source=https://artifacts.elastic.co/downloads/${pkg_distname}/${pkg_distname}-${pkg_version}.tar.gz
+pkg_shasum=6c8b46498186bb2f4183660d8653375fc38bddd043302ddb20c516b42ab0125e
 pkg_dirname="elasticsearch-${pkg_version}"
-pkg_deps=(
-  core/busybox-static
-  core/glibc
-  core/jre8
-)
-pkg_bin_dirs=(es/bin)
-pkg_binds_optional=(
-  [elasticsearch]="http-port transport-port"
-)
-pkg_lib_dirs=(es/lib)
-pkg_exports=(
-  [http-port]=network.port
-  [transport-port]=transport.port
-)
-pkg_exposes=(http-port transport-port)
-
-do_build() {
-  return 0
-}
 
 do_install() {
   install -vDm644 README.textile "${pkg_prefix}/README.textile"
@@ -37,10 +21,6 @@ do_install() {
   # so we need to put the untemplated config dir out of reach
   mkdir -p "${pkg_prefix}/es"
   cp -a ./* "${pkg_prefix}/es"
-
-  # jvm.options needs to live relative to the binary.
-  # mkdir -p mkdir -p "$pkg_prefix/es/config"
-  # install -vDm644 config/jvm.options "$pkg_prefix/es/config/jvm.options"
 
   # Delete unused binaries to save space
   rm "${pkg_prefix}/es/bin/"*.bat "${pkg_prefix}/es/bin/"*.exe

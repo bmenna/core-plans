@@ -32,7 +32,7 @@ do_default_prepare() {
   _detect_git
 
   # Determine Ruby engine, ABI version, and Gem path by running `ruby` itself.
-  eval "$(ruby -rubygems -rrbconfig - <<-'EOF'
+  eval "$(ruby -r rubygems -rrbconfig - <<-'EOF'
     puts "local ruby_engine=#{defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'ruby'}"
     puts "local ruby_version=#{RbConfig::CONFIG['ruby_version']}"
     puts "local gem_path='#{Gem.path.join(':')}'"
@@ -197,7 +197,7 @@ EOT
 scaffolding_bundle_install() {
   local start_sec elapsed
 
-  build_line "Installing dependencies using $(_bundle --version)"
+  build_line "Installing dependencies using Bundler version ${_bundler_version}"
   start_sec="$SECONDS"
 
   {
@@ -347,13 +347,12 @@ scaffolding_generate_binstubs() {
 }
 
 scaffolding_vendor_bundler() {
-  build_line "Vendoring $(_bundle --version)"
+  build_line "Vendoring 'bundler' version ${_bundler_version}"
   gem install \
     --local "$(pkg_path_for bundler)/cache/bundler-${_bundler_version}.gem" \
     --install-dir "$GEM_HOME" \
     --bindir "$scaffolding_app_prefix/binstubs" \
-    --no-ri \
-    --no-rdoc
+    --no-document
   _wrap_ruby_bin "$scaffolding_app_prefix/binstubs/bundle"
   _wrap_ruby_bin "$scaffolding_app_prefix/binstubs/bundler"
 }
@@ -451,7 +450,7 @@ _setup_vars() {
     tgbyte-activerecord-jdbcpostgresql-adapter)
   # The version of Bundler in use
   _bundler_version="$("$(pkg_path_for bundler)/bin/bundle" --version \
-    | awk '{print $NF}')"
+    | awk '/^Bundler version/ {print $NF}')"
   # The install prefix path for the app
   app_prefix="app"
   #
@@ -624,9 +623,9 @@ _update_bin_dirs() {
   # dirs so they will be on `PATH.  We do this after the existing values so
   # that the Plan author's `${pkg_bin_dir[@]}` will always win.
   pkg_bin_dirs=(
-    ${pkg_bin_dir[@]}
+    "${pkg_bin_dir[@]}"
     bin
-    $app_prefix/binstubs
+    "$app_prefix/binstubs"
   )
 }
 
@@ -642,20 +641,20 @@ _update_svc_run() {
 
 _add_busybox() {
   build_line "Adding Busybox package to run dependencies"
-  pkg_deps=(core/busybox-static ${pkg_deps[@]})
+  pkg_deps=(core/busybox-static "${pkg_deps[@]}")
   debug "Updating pkg_deps=(${pkg_deps[*]}) from Scaffolding detection"
 }
 
 _add_git() {
   build_line "Adding git to build dependencies"
-  pkg_build_deps=(core/git ${pkg_build_deps[@]})
+  pkg_build_deps=(core/git "${pkg_build_deps[@]}")
   debug "Updating pkg_build_deps=(${pkg_build_deps[*]}) from Scaffolding detection"
 }
 
 _detect_execjs() {
   if _has_gem execjs; then
     build_line "Detected 'execjs' gem in Gemfile.lock, adding node packages"
-    pkg_deps=(core/node ${pkg_deps[@]})
+    pkg_deps=(core/node "${pkg_deps[@]}")
     debug "Updating pkg_deps=(${pkg_deps[*]}) from Scaffolding detection"
   fi
 }
@@ -672,7 +671,7 @@ _detect_nokogiri() {
   if _has_gem nokogiri; then
     build_line "Detected 'nokogiri' gem in Gemfile.lock, adding libxml2 & libxslt packages"
     export BUNDLE_BUILD__NOKOGIRI="--use-system-libraries"
-    pkg_deps=(core/libxml2 core/libxslt ${pkg_deps[@]})
+    pkg_deps=(core/libxml2 core/libxslt "${pkg_deps[@]}")
     debug "Updating pkg_deps=(${pkg_deps[*]}) from Scaffolding detection"
   fi
 }
@@ -681,7 +680,7 @@ _detect_pg() {
   for gem in "${_pg_gems[@]}"; do
     if _has_gem "$gem"; then
       build_line "Detected '$gem' gem in Gemfile.lock, adding postgresql package"
-      pkg_deps=(core/postgresql ${pkg_deps[@]})
+      pkg_deps=(core/postgresql-client "${pkg_deps[@]}")
       debug "Updating pkg_deps=(${pkg_deps[*]}) from Scaffolding detection"
       _uses_pg=true
       return 0
@@ -803,14 +802,14 @@ _detect_ruby() {
       build_line "No Ruby version detected in Plan or Gemfile.lock, using default '$_ruby_pkg'"
     fi
   fi
-  pkg_deps=($_ruby_pkg ${pkg_deps[@]})
+  pkg_deps=("$_ruby_pkg" "${pkg_deps[@]}")
   debug "Updating pkg_deps=(${pkg_deps[*]}) from Scaffolding detection"
 }
 
 _detect_sqlite3() {
   if _has_gem sqlite3; then
     build_line "Detected 'sqlite3' gem in Gemfile.lock, adding sqlite packages"
-    pkg_deps=(core/sqlite ${pkg_deps[@]})
+    pkg_deps=(core/sqlite "${pkg_deps[@]}")
     debug "Updating pkg_deps=(${pkg_deps[*]}) from Scaffolding detection"
   fi
 }
@@ -818,7 +817,7 @@ _detect_sqlite3() {
 _detect_webpacker() {
   if _has_gem webpacker; then
     build_line "Detected 'webpacker' gem in Gemfile.lock, adding yarn packages"
-    pkg_deps=(core/yarn ${pkg_deps[@]})
+    pkg_deps=(core/yarn "${pkg_deps[@]}")
     debug "Updating pkg_deps=(${pkg_deps[*]}) from Scaffolding detection"
   fi
 }
@@ -977,8 +976,8 @@ _set_if_unset() {
   key="$2"
   val="$3"
 
-  if [[ ! -v "$hash[$key]" ]]; then
-    eval "$hash[$key]='$val'"
+  if [[ ! -v "${hash}[${key}]" ]]; then
+    eval "${hash}[${key}]='${val}'"
   fi
 }
 

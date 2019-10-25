@@ -1,7 +1,7 @@
 pkg_name=openssl
 _distname="$pkg_name"
 pkg_origin=core
-pkg_version=1.0.2n
+pkg_version=1.0.2r
 pkg_maintainer="The Habitat Maintainers <humans@habitat.sh>"
 pkg_description="\
 OpenSSL is an open source project that provides a robust, commercial-grade, \
@@ -12,12 +12,12 @@ library.\
 pkg_upstream_url="https://www.openssl.org"
 pkg_license=('OpenSSL')
 pkg_source="https://www.openssl.org/source/${_distname}-${pkg_version}.tar.gz"
-pkg_shasum="370babb75f278c39e0c50e8c4e7493bc0f18db6867478341a832a982fd15a8fe"
+pkg_shasum="ae51d08bba8a83958e894946f15303ff894d75c2b8bbd44a852b64e3fe11d0d6"
 pkg_dirname="${_distname}-${pkg_version}"
 pkg_deps=(
   core/glibc
-  core/zlib
   core/cacerts
+  core/openssl-fips
 )
 pkg_build_deps=(
   core/coreutils
@@ -45,10 +45,15 @@ _common_prepare() {
       "$PLAN_CONTEXT/ca-dir.patch" \
       | patch -p1 --backup
 
-  # Purge the codebase (mostly tests) of the hardcoded reliance on `/bin/rm`.
-  grep -lr '/bin/rm' . | while read -r f; do
-    sed -e 's,/bin/rm,rm,g' -i "$f"
-  done
+  # The openssl build process hard codes /bin/rm in many places. Unfortunately
+  # we cannot modify the contents of the build scripts to fix this or else we
+  # risk violating the sanctity of the official fips build process.
+  # Instead, we link rm to maintain integrity.
+  # Reference: https://www.openssl.org/docs/fips/UserGuide-2.0.pdf
+  if [[ ! -f "/bin/rm" ]]; then
+    hab pkg binlink core/coreutils rm --dest /bin
+    BINLINKED_RM=true
+  fi
 }
 
 do_prepare() {
@@ -62,20 +67,24 @@ do_build() {
   # Set PERL var for scripts in `do_check` that use Perl
   PERL=$(pkg_path_for core/perl)/bin/perl
   export PERL
-  # shellcheck disable=SC2086
-  ./config \
-    --prefix="${pkg_prefix}" \
-    --openssldir=ssl \
+  "$(pkg_path_for core/perl)/bin/perl" ./Configure \
     no-idea \
     no-mdc2 \
     no-rc5 \
-    zlib \
+    no-sslv2 \
+    no-sslv3 \
+    no-comp \
+    no-zlib \
     shared \
     disable-gost \
-    $CFLAGS \
-    $LDFLAGS
-  env CC= make depend
-  make CC="$BUILD_CC"
+    --prefix="${pkg_prefix}" \
+    --openssldir=ssl \
+    linux-x86_64 \
+    --with-fipsdir="$(pkg_path_for core/openssl-fips)" \
+    fips
+
+  make CC= depend
+  make --jobs="$(nproc)" CC="$BUILD_CC"
 }
 
 do_check() {
@@ -101,6 +110,14 @@ do_install() {
   rm -rfv "$pkg_prefix/ssl/misc" "$pkg_prefix/bin/c_rehash"
 }
 
+do_end() {
+  do_default_end
+
+  # Clean up binlinked rm if we made it
+  if [[ $BINLINKED_RM == true ]]; then
+    rm -f /bin/rm
+  fi
+}
 
 # ----------------------------------------------------------------------------
 # **NOTICE:** What follows are implementation details required for building a

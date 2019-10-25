@@ -148,6 +148,12 @@ All plans should have a README. In core plans, it is a hard requirement. Your RE
   - Can a user simply call the package as a dependency of their application?
   - How does the package integrate into their developer workflow?
 
+## Running CI locally
+
+Each script in `bin/ci` will be run in CI when you make a Pull Request.  The scripts are designed to be
+runnable outside of CI as well, so you can invoke `bin/ci/script-to-run plan_name` from the root of the project.
+This allows you to verify that your changes will pass CI before submitting a Pull Request.  
+
 ## Linting Your Plans
 
 It is good it use a tool to lint your plans to ensure you are not making any
@@ -158,7 +164,7 @@ Some default checks of ShellCheck can be turned off, since they aren't
 necessarily applicable in plans. The following options work well:
 
 ```
-shellcheck --shell=bash --exclude=SC1090,SC1091,SC2034,SC2039,SC2148,SC2153,SC2154,SC2140
+shellcheck --shell=bash --exclude=SC1090,SC1091,SC1117,SC2034,SC2039,SC2140,SC2148,SC2153,SC2154,SC2164
 ```
 
 If ShellCheck is installed, you can run this (and other checks) locally with:
@@ -257,3 +263,13 @@ You may optionally add yourself as a CODEOWNER of a plan. Adding yourself as an 
 ## Add yourself to core plans maintainers
 
 You can add yourself to [core plans maintainers](MAINTAINERS.md) to take a greater role and responsibility in the care, feeding, and maintenance of all core plans.
+
+## Base Plans
+
+Some core plans are deeply integrated with how Habitat bootstraps itself. These plans are known as base plans. These plans require more work to ensure they build safely and correctly. Currently, any changes to base plans require a core plans base refresh, where the entire set of base plans is rebuilt, exluding the list of plans below:
+
+```
+openssl
+```
+
+We maintain a list of all of the base plans here: https://github.com/habitat-sh/core-plans/blob/master/base-plans.txt

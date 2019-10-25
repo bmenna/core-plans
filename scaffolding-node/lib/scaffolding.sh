@@ -104,7 +104,9 @@ scaffolding_modules_install() {
   # This directory is not created with Habitat by design
   # Instead, we use core/coreutils for this functionality
   # This sets up a symlink to simulate a /usr/bin/env,
-  # But still use coreutils
+  # But still use coreutils. Additionally, /usr/bin isn't
+  # guaranteed to exist, so create it first.
+  mkdir -p /usr/bin
   ln -svf "$(pkg_path_for coreutils)/bin/env" /usr/bin/env
 
   start_sec="$SECONDS"
@@ -114,7 +116,7 @@ scaffolding_modules_install() {
       if [[ ! -f "$CACHE_PATH/package.json" ]]; then
         cp -av package.json "$CACHE_PATH/"
       fi
-      if [[ -c ".npmrc" ]]; then
+      if [[ -f ".npmrc" ]]; then
         cp -av .npmrc "$CACHE_PATH/"
       fi
       if [[ -f "npm-shrinkwrap.json" ]]; then
@@ -644,9 +646,9 @@ _extracted_version_number() {
 }
 
 _full_version_digits() {
-    if [[ $1 =~ ([0-9]\.[0-9]\.[0-9]$) ]]; then
+    if [[ $1 =~ ([0-9]+\.[0-9]+\.[0-9]+$) ]]; then
         echo "$1"
-    elif [[ $1 =~ ([0-9]\.[0-9]$) ]]; then
+    elif [[ $1 =~ ([0-9]+\.[0-9]+$) ]]; then
         echo "$1.0"
     else
         echo "$1.0.0"
@@ -658,13 +660,15 @@ remove_single_chars() {
 }
 
 stable_versions_list() {
-	versions_list=$($_jq '.data[].version' < "${1}")
+  local filter=".data[] | select(.platforms[] | contains(\"$pkg_target\")) | .version"
+
+	versions_list=$($_jq "${filter}" < "${1}")
 	versions_str=${versions_list[0]}
 
 	versions_array=()
 
 	versions_array=($versions_str)
-	sorted_versions_array=($(for l in "${versions_array[@]}"; do echo "$l"; done | sort))
+	sorted_versions_array=($(for l in "${versions_array[@]}"; do echo "$l"; done | sort -V))
 	echo "${sorted_versions_array[@]}"
 }
 

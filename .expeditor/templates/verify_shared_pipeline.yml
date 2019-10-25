@@ -1,0 +1,20 @@
+  - label: "[@@plan@@] :habicat: Check for .bldr.toml entry"
+    command:
+      - bin/ci/check-bldr-toml.sh @@plan@@
+    expeditor:
+      executor:
+        docker:
+
+  - label: "[@@plan@@] :habicat: Check for bad patterns"
+    command:
+      - bin/ci/check-bad-patterns.sh @@plan@@
+    expeditor:
+      executor:
+        docker:
+
+  - label: "[@@plan@@] :habicat: Check for extraneous whitespace"
+    command:
+      - bin/ci/check-pre-commit.sh @@plan@@
+    expeditor:
+      executor:
+        docker:

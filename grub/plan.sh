@@ -17,6 +17,8 @@ pkg_build_deps=(
   core/diffutils
   core/dosfstools
   core/flex
+  core/zlib
+  core/libpng
   core/freetype
   core/gcc
   core/gettext
@@ -27,6 +29,7 @@ pkg_build_deps=(
   core/qemu
   core/rsync
   core/texinfo
+  core/patch
 )
 pkg_deps=(core/glibc core/xz core/gettext core/pcre core/gcc-libs core/devicemapper core/elfutils core/bzip2 core/libcap)
 
@@ -35,6 +38,10 @@ do_setup() {
     mkdir /boot
     _GRUB_CLEANUP_BOOT="yes"
   fi
+}
+
+do_prepare() {
+  patch -Np1 < "${PLAN_CONTEXT}/patches/001-fix-packed-not-aligned-error-on-GCC-8.patch"
 }
 
 do_build() {
@@ -66,6 +73,10 @@ do_check() {
 
 do_after() {
   if [[ -n "${_GRUB_CLEANUP_BOOT}" ]]; then
+    # Although this looks dangerous, it shouldn't be
+    # because this should only every run in a habitat studio environment and
+    # the /boot directory is both created and destroyed by the plan
+    # shellcheck disable=SC2114
     rm -rf /boot
     info "Cleanup /boot"
   fi

@@ -12,5 +12,5 @@ Binary package
 
 ## Usage
 
-Include `core/clang` if you need any of the libraries, includes and clang tools.  For additional
+Include `core/clang` if you need any of the libraries, includes, clang tools and clang-tools-extra.  For additional
 usage, refer to the [`pkg_upstream_url`](http://clang.llvm.org/)

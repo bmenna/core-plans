@@ -1,13 +1,13 @@
 pkg_name=curl
 pkg_origin=core
-pkg_version=7.54.1
+pkg_version=7.65.3
 pkg_description="curl is an open source command line tool and library for
   transferring data with URL syntax."
 pkg_upstream_url=https://curl.haxx.se/
 pkg_maintainer="The Habitat Maintainers <humans@habitat.sh>"
 pkg_license=('curl')
 pkg_source=https://curl.haxx.se/download/${pkg_name}-${pkg_version}.tar.gz
-pkg_shasum=cd404b808b253512dafec4fed0fb2cc98370d818a7991826c3021984fc27f9d0
+pkg_shasum=4376ac72b95572fb6c4fbffefb97c7ea0dd083e1974c0e44cd7e49396f454839
 pkg_deps=(
   core/cacerts
   core/glibc
@@ -28,7 +28,7 @@ pkg_lib_dirs=(lib)
 
 do_prepare() {
   # Patch the zsh-generating program to use our perl at build time
-  sed -i "s,/usr/bin/perl,$(pkg_path_for perl)/bin/perl,g" scripts/zsh.pl
+  sed -i "s,/usr/bin/env/perl,$(pkg_path_for perl)/bin/perl,g" scripts/completion.pl
 }
 
 do_build() {

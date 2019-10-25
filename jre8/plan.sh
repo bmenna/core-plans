@@ -1,18 +1,19 @@
+# shellcheck disable=SC2164
 pkg_origin=core
 pkg_maintainer="The Habitat Maintainers <humans@habitat.sh>"
 pkg_name=jre8
-pkg_version=8.172.0
-pkg_upstream_version=8u172
-pkg_source="http://download.oracle.com/otn-pub/java/jdk/${pkg_upstream_version}-b11/a58eab1ec242421181065cdc37240b08/jre-${pkg_upstream_version}-linux-x64.tar.gz"
-pkg_shasum="f08f25aec2bdc86138ccba8fd5b904451e3afa1d24a88c85f28c2d84bfd45bad"
+pkg_version=8.192.0
+pkg_upstream_version=8u192
+pkg_source="http://download.oracle.com/otn-pub/java/jdk/${pkg_upstream_version}-b12/750e1c8617c5452694857ad95c3ee230/jre-${pkg_upstream_version}-linux-x64.tar.gz"
+pkg_shasum="f23a3e2b9decef82b74f850157580d929ab35e9f19be5e0a10c779b68be51d43"
 pkg_filename="jre-${pkg_upstream_version}-linux-x64.tar.gz"
 pkg_license=('Oracle Binary Code License Agreement for the Java SE Platform Products and JavaFX')
 pkg_description=('Oracle Java Runtime Environment. This package is made available to you to allow you to run your applications as provided in and subject to the terms of the Oracle Binary Code License Agreement for the Java SE Platform Products and JavaFX, found at http://www.oracle.com/technetwork/java/javase/terms/license/index.html')
 pkg_upstream_url="http://www.oracle.com/technetwork/java/javase/overview/index.html"
 pkg_deps=(core/glibc core/gcc-libs core/xlib core/libxi core/libxext core/libxrender core/libxtst)
 pkg_build_deps=(core/patchelf)
-pkg_bin_dirs=(bin)
-pkg_lib_dirs=(lib)
+pkg_bin_dirs=(bin jre/bin)
+pkg_lib_dirs=(lib jre/lib)
 pkg_include_dirs=(include)
 
 source_dir=$HAB_CACHE_SRC_PATH/${pkg_name}-${pkg_upstream_version}
@@ -52,6 +53,9 @@ download_file() {
 
 do_unpack() {
   local unpack_file="$HAB_CACHE_SRC_PATH/$pkg_filename"
+  if [[ -d "$source_dir" ]]; then
+    rm -rf "$source_dir";
+  fi
   mkdir "$source_dir"
   pushd "$source_dir" >/dev/null
   tar xz --strip-components=1 -f "$unpack_file"
@@ -71,9 +75,14 @@ do_install() {
   build_line "Setting interpreter for '${pkg_prefix}/bin/java' '$(pkg_path_for glibc)/lib/ld-linux-x86-64.so.2'"
   build_line "Setting rpath for '${pkg_prefix}/bin/java' to '$LD_RUN_PATH'"
 
-  export LD_RUN_PATH=$LD_RUN_PATH:$pkg_prefix/lib/amd64/jli:$pkg_prefix/lib/amd64/server:$pkg_prefix/lib/amd64
+  LD_RUN_PATH=$LD_RUN_PATH:$pkg_prefix/lib/amd64/jli:$pkg_prefix/lib/amd64/server:$pkg_prefix/lib/amd64
+  export LD_RUN_PATH
 
   find "$pkg_prefix"/bin -type f -executable \
+    -exec sh -c 'file -i "$1" | grep -q "x-executable; charset=binary"' _ {} \; \
+    -exec patchelf --interpreter "$(pkg_path_for glibc)/lib/ld-linux-x86-64.so.2" --set-rpath "${LD_RUN_PATH}" {} \;
+
+  find "$pkg_prefix"/jre/bin -type f -executable \
     -exec sh -c 'file -i "$1" | grep -q "x-executable; charset=binary"' _ {} \; \
     -exec patchelf --interpreter "$(pkg_path_for glibc)/lib/ld-linux-x86-64.so.2" --set-rpath "${LD_RUN_PATH}" {} \;
 

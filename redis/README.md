@@ -1,9 +1,45 @@
-Redis 3.2.3 (and 3.2.4) introduced protected mode (forced authentication) by default, which means the leader election fails unless you authenticate. You can demo with a TOML file simlilar to this:
+# Redis
+
+Redis is an open source (BSD licensed), in-memory data structure store, used as a database, cache and message broker.
+
+## Maintainers
+
+* The Habitat Maintainers <humans@habitat.sh>
+
+## Type of Package
+
+Service package
+
+## Usage
+
+Redis first requires configuration to setup the credentials for protected mode. No defaults are assumed for users of the package.
+
+Example service install / load and setup:
+
 ```
-requirepass="abc123"
-masterauth="abc123"
+hab pkg install core/redis
+
+echo '
+requirepass="password"
+' | hab config apply redis.default $(date +%s)
+
+hab svc load core/redis
 ```
 
-And inject it like this:
+## Bindings
 
-docker run -e HAB_REDIS="$(cat /tmp/redis.toml)" -it core/redis --topology leader
+Redis provides the bind `port` for other services to bind to.
+
+```
+hab svc load my/service --bind redis:redis.default
+```
+
+## Topologies
+
+The default configuration does not enable clustering. This should be addresed in future Habitat plan releases.
+
+For the moment, a `standalone` topology is possible with the default configuration.
+
+## Update Strategies
+
+An `at-once` strategy would suffice for the standalone installation. If you are running in cluster mode, it is recommended that you employ the `rolling` strategy.

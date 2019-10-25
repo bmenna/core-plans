@@ -6,6 +6,7 @@ pkg_upstream_url="https://www.mesa3d.org"
 pkg_maintainer="The Habitat Maintainers <humans@habitat.sh>"
 pkg_license=('MIT')
 pkg_source="https://mesa.freedesktop.org/archive/${pkg_name}-${pkg_version}.tar.xz"
+pkg_source="https://mesa.freedesktop.org/archive/older-versions/17.x/${pkg_name}-${pkg_version}.tar.xz"
 pkg_shasum=7f7f914b7b9ea0b15f2d9d01a4375e311b0e90e55683b8e8a67ce8691eb1070f
 pkg_deps=(
   core/elfutils
@@ -42,6 +43,7 @@ pkg_build_deps=(
   core/python2
   core/xextproto
   core/xproto
+  core/patch
 )
 pkg_include_dirs=(include)
 pkg_lib_dirs=(
@@ -55,6 +57,11 @@ do_prepare() {
     ln -sv "$(pkg_path_for file)/bin/file" /usr/bin/file
     _clean_file=true
   fi
+
+  # https://patchwork.freedesktop.org/patch/214086/
+  patch -p0 < "$PLAN_CONTEXT"/patches/000-llvm7-support.patch
+  # https://patchwork.freedesktop.org/patch/186737/
+  patch -p0 < "$PLAN_CONTEXT"/patches/001-llvm-enable-new-fast-math-flags.patch
 }
 
 do_build() {

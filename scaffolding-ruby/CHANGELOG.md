@@ -2,6 +2,15 @@
 
 [Full history](https://github.com/habitat-sh/core-plans/commits/master/scaffolding-ruby)
 
+# 0.8.11 (05-29-2019)
+
+- Replace dependency on `core/postgresql` with `core/postgresql-client`. [\#2595](https://github.com/habitat-sh/core-plans/issues/2595)
+
+# 0.8.10 (09-20-2018)
+
+- Fix parsing of `bundler --version` output to ensure ${_bundler_version}
+  is really the version number of bundler
+
 # 0.8.9 (12-08-2017)
 
 - Improve git detection with `git rev-parse --is-in-work-tree`, makes
